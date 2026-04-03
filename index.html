@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monopoly Ultra Online</title>
+    <title>Monopoly Ultra Online - V3</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
@@ -17,190 +18,207 @@
             color: #f1f5f9; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh;
         }
 
-        /* واجهة الدخول المودرن */
         .auth-card {
-            background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px);
+            background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(10px);
             padding: 40px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1);
             width: 380px; text-align: center; box-shadow: 0 25px 50px rgba(0,0,0,0.5);
         }
 
         input {
             width: 100%; padding: 12px; margin: 10px 0; border-radius: 12px; border: 2px solid #334155;
-            background: #1e293b; color: white; text-align: center; box-sizing: border-box;
+            background: #1e293b; color: white; text-align: center; box-sizing: border-box; font-family: inherit;
         }
 
         .btn {
             width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: none;
-            font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 1rem;
+            font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 1rem; font-family: inherit;
         }
 
         .btn-host { background: linear-gradient(45deg, var(--primary), var(--secondary)); color: white; }
         .btn-join { background: #334155; color: white; border: 1px solid var(--primary); }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* اللوحة الاحترافية */
-        #main-container { display: none; gap: 20px; padding: 20px; animation: fadeIn 0.5s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        #main-container { display: none; gap: 20px; padding: 20px; align-items: flex-start; }
 
         #board {
             display: grid; grid-template-columns: repeat(11, 1fr); grid-template-rows: repeat(11, 1fr);
-            width: 650px; height: 650px; background: #e2e8f0; border: 12px solid #1e293b;
-            border-radius: 8px; position: relative; box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            width: 600px; height: 600px; background: #f1f5f9; border: 10px solid #1e293b;
+            border-radius: 12px; position: relative;
         }
 
         .cell {
-            border: 1px solid #94a3b8; background: white; color: #1e293b; font-size: 10px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            font-weight: bold; transition: 0.2s;
+            border: 1px solid #cbd5e1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; font-size: 11px;
+            color: #1e293b; font-weight: bold; position: relative; background: white;
         }
 
         .center-hub {
-            grid-column: 2/11; grid-row: 2/11; background: #cbd5e1;
+            grid-column: 2/11; grid-row: 2/11; background: #e2e8f0;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
 
         .token {
-            width: 24px; height: 24px; border-radius: 50%; position: absolute;
-            z-index: 100; border: 3px solid white; transition: 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            width: 26px; height: 26px; border-radius: 50%; position: absolute;
+            z-index: 100; border: 3px solid white; transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; align-items: center; justify-content: center; font-size: 14px;
         }
 
-        .sidebar { width: 320px; background: #1e293b; padding: 20px; border-radius: 20px; }
-        .stat-card { background: #0f172a; padding: 15px; border-radius: 15px; margin-bottom: 10px; border-left: 5px solid var(--primary); }
-        .log-box { height: 180px; overflow-y: auto; background: #020617; padding: 10px; border-radius: 10px; font-size: 12px; margin-top: 15px; color: #94a3b8; }
+        .sidebar { width: 300px; display: flex; flex-direction: column; gap: 15px; }
+        .player-card {
+            background: #1e293b; padding: 15px; border-radius: 15px;
+            border-right: 8px solid transparent; transition: 0.3s;
+        }
+        .active-p { border-right-color: var(--accent); transform: scale(1.02); background: #2d3e50; }
+
+        .log-box {
+            height: 150px; overflow-y: auto; background: #020617;
+            padding: 10px; border-radius: 10px; font-size: 12px; color: #94a3b8;
+        }
     </style>
 </head>
 <body>
 
     <div id="auth-screen" class="auth-card">
-        <h1 style="color:var(--accent); margin-bottom:5px;">MONOPOLY ULTRA</h1>
-        <p style="font-size:14px; opacity:0.7;">أونلاين متعدد اللاعبين</p>
+        <h1 style="color:var(--accent);">MONOPOLY GO</h1>
+        <input type="text" id="username" placeholder="اكتب اسمك هنا">
         
-        <input type="text" id="username" placeholder="اكتب اسمك المستعار">
-        
-        <div style="margin: 20px 0;">
-            <button class="btn btn-host" id="host-btn" onclick="startHosting()">إنشاء غرفة جديدة (Host)</button>
-            <div id="my-id-box" style="display:none; margin-top:10px;">
-                <small>انسخ هذا الـ ID وأرسله لصديقك:</small>
-                <div id="peer-id" style="color:var(--accent); font-weight:bold; cursor:pointer; padding:5px; border:1px dashed;" onclick="copyID()">جاري التحميل...</div>
+        <div id="host-section">
+            <button class="btn btn-host" onclick="startHosting()">أنشئ غرفة (أنت تبدأ أولاً)</button>
+            <div id="my-id-container" style="display:none; margin-top:10px; font-size:12px;">
+                <p>شارك الـ ID مع صديقك:</p>
+                <div id="peer-id" style="color:var(--accent); font-weight:bold; background:#0f172a; padding:10px; border-radius:8px;">جاري التحميل...</div>
             </div>
         </div>
 
-        <div style="border-top: 1px solid #334155; padding-top:20px;">
-            <input type="text" id="join-id-input" placeholder="ضع ID الصديق هنا">
-            <button class="btn btn-join" onclick="joinRoom()">انضمام الآن (Join)</button>
+        <div style="margin: 20px 0; border-top: 1px solid #334155; padding-top:20px;">
+            <input type="text" id="join-id-input" placeholder="ألصق ID صديقك هنا">
+            <button class="btn btn-join" onclick="joinRoom()">انضم لصديقك</button>
         </div>
     </div>
 
     <div id="main-container">
         <div id="board">
             <div class="center-hub">
-                <div style="font-size:50px; color:var(--danger); font-weight:900; transform: rotate(-45deg); border:5px solid; padding:10px;">MONOPOLY</div>
-                <div id="dice-display" style="font-size:4rem; margin-top:30px;">🎲</div>
+                <div id="dice-result" style="font-size: 5rem;">🎲</div>
+                <div id="turn-indicator" style="color:#1e293b; font-weight:bold; margin-top:10px;">انتظار الاتصال...</div>
             </div>
         </div>
 
         <div class="sidebar">
-            <div class="stat-card">
-                <div id="p1-name-tag">اللاعب 1 (المضيف)</div>
-                <div style="font-size:24px; color:var(--success);">💰 <span id="p1-bal">1500</span>$</div>
+            <div id="card-0" class="player-card">
+                <div id="name-0" style="font-weight:bold; font-size:18px;">المضيف</div>
+                <div style="color:var(--success); font-size:22px;">💰 <span id="bal-0">1500</span>$</div>
             </div>
-            <div class="stat-card" style="border-color:var(--secondary)">
-                <div id="p2-name-tag">اللاعب 2 (الضيف)</div>
-                <div style="font-size:24px; color:var(--success);">💰 <span id="p2-bal">1500</span>$</div>
+            <div id="card-1" class="player-card">
+                <div id="name-1" style="font-weight:bold; font-size:18px;">الضيف</div>
+                <div style="color:var(--success); font-size:22px;">💰 <span id="bal-1">1500</span>$</div>
             </div>
 
-            <div id="game-status" style="text-align:center; margin:15px; font-weight:bold; color:var(--accent);">في انتظار الخصم...</div>
             <button id="roll-btn" class="btn btn-host" onclick="playTurn()" disabled>إرمِ النرد 🎲</button>
-            
             <div class="log-box" id="game-log"></div>
         </div>
     </div>
 
-    <div id="token0" class="token" style="background:var(--primary);"></div>
-    <div id="token1" class="token" style="background:var(--danger);"></div>
+    <div id="token0" class="token" style="background:var(--primary);">👤</div>
+    <div id="token1" class="token" style="background:var(--danger);">👤</div>
 
 <script>
     let peer, conn;
     let myRole = ''; 
     let state = {
-        players: [{pos:0, bal:1500, name:''}, {pos:0, bal:1500, name:''}],
-        turn: 0,
+        players: [
+            {pos:0, bal:1500, name:''}, 
+            {pos:0, bal:1500, name:''}
+        ],
+        turn: 0, // 0 للمضيف دائماً في البداية
         owners: Array(40).fill(null),
-        ready: false
+        namesSynced: false
     };
 
-    // --- نظام الربط P2P ---
-    function initPeer() {
+    function startHosting() {
+        const name = document.getElementById('username').value;
+        if(!name) return alert("من فضلك اكتب اسمك!");
+        state.players[0].name = name;
+        myRole = 'host';
+        
         peer = new Peer();
         peer.on('open', id => {
             document.getElementById('peer-id').innerText = id;
-            document.getElementById('my-id-box').style.display = 'block';
+            document.getElementById('my-id-container').style.display = 'block';
         });
 
         peer.on('connection', c => {
             conn = c;
-            myRole = 'host';
-            setupConnection();
+            setupLogic();
         });
     }
 
-    function startHosting() {
-        if(!document.getElementById('username').value) return alert("اكتب اسمك أولاً");
-        document.getElementById('host-btn').disabled = true;
-        initPeer();
-    }
-
     function joinRoom() {
+        const name = document.getElementById('username').value;
         const targetId = document.getElementById('join-id-input').value;
-        if(!targetId) return alert("أدخل ID الصديق أولاً");
+        if(!name || !targetId) return alert("أكمل البيانات أولاً!");
+        
+        state.players[1].name = name;
+        myRole = 'guest';
         
         peer = new Peer();
         peer.on('open', () => {
             conn = peer.connect(targetId);
-            myRole = 'guest';
-            setupConnection();
+            setupLogic();
         });
     }
 
-    function setupConnection() {
+    function setupLogic() {
         conn.on('open', () => {
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('main-container').style.display = 'flex';
             
+            // المضيف يرسل اسمه فوراً للضيف
             if(myRole === 'host') {
-                state.players[0].name = document.getElementById('username').value;
-                state.ready = true;
                 sync();
+            } else {
+                // الضيف يرسل اسمه للمضيف
+                conn.send({type: 'NAME_SYNC', name: state.players[1].name});
             }
+            
             initBoard();
-            addLog("🎉 تم الاتصال! لنبدأ اللعب.");
+            addLog("🎮 تم الاتصال! صاحب الغرفة يبدأ أولاً.");
         });
 
         conn.on('data', data => {
-            state = data;
-            updateUI();
+            if(data.type === 'NAME_SYNC') {
+                if(myRole === 'host') {
+                    state.players[1].name = data.name;
+                    sync(); // المضيف يوزع الأسماء النهائية
+                }
+            } else {
+                state = data;
+                updateUI();
+            }
         });
     }
 
-    // --- منطق اللعبة المزامنة ---
     function playTurn() {
-        const move = Math.floor(Math.random() * 6) + Math.floor(Math.random() * 6) + 2;
-        const p = state.players[state.turn];
+        const dice1 = Math.floor(Math.random() * 6) + 1;
+        const dice2 = Math.floor(Math.random() * 6) + 1;
+        const move = dice1 + dice2;
         
+        document.getElementById('dice-result').innerText = getDiceEmoji(dice1) + getDiceEmoji(dice2);
+        
+        const p = state.players[state.turn];
         p.pos = (p.pos + move) % 40;
-        if(p.pos < move) p.bal += 200;
+        
+        // مكافأة البداية
+        if(p.pos < move && p.pos !== 0) p.bal += 200;
 
-        // منطق مبسط للشراء
+        // منطق شراء بسيط
         if(p.pos !== 0 && state.owners[p.pos] === null) {
-            if(p.bal > 200) {
-                p.bal -= 150;
-                state.owners[p.pos] = state.turn;
-                addLog(`${p.name} اشترى عقاراً بـ 150$`);
-            }
-        } else if(state.owners[p.pos] !== null && state.owners[p.pos] !== state.turn) {
             p.bal -= 100;
-            state.players[state.owners[p.pos]].bal += 100;
-            addLog(`${p.name} دفع إيجاراً 100$`);
+            state.owners[p.pos] = state.turn;
+            addLog(`🏠 ${p.name} اشترى المربع بـ 100$`);
+        } else if(state.owners[p.pos] !== null && state.owners[p.pos] !== state.turn) {
+            p.bal -= 50;
+            state.players[state.owners[p.pos]].bal += 50;
+            addLog(`💸 ${p.name} دفع إيجار 50$`);
         }
 
         state.turn = state.turn === 0 ? 1 : 0;
@@ -210,18 +228,25 @@
 
     function sync() {
         if(conn && conn.open) conn.send(state);
+        updateUI();
     }
 
     function updateUI() {
-        document.getElementById('p1-bal').innerText = state.players[0].bal;
-        document.getElementById('p2-bal').innerText = state.players[1].bal;
-        document.getElementById('p1-name-tag').innerText = state.players[0].name || "المضيف";
-        document.getElementById('p2-name-tag').innerText = state.players[1].name || "الضيف";
+        // تحديث الأسماء والأرصدة
+        document.getElementById('name-0').innerText = state.players[0].name || "المضيف";
+        document.getElementById('name-1').innerText = state.players[1].name || "الضيف";
+        document.getElementById('bal-0').innerText = state.players[0].bal;
+        document.getElementById('bal-1').innerText = state.players[1].bal;
 
+        // دور من؟
         const isMyTurn = (myRole === 'host' && state.turn === 0) || (myRole === 'guest' && state.turn === 1);
         document.getElementById('roll-btn').disabled = !isMyTurn;
-        document.getElementById('game-status').innerText = isMyTurn ? "دورك الآن!" : "انتظار الخصم...";
+        document.getElementById('turn-indicator').innerText = isMyTurn ? "دورك الآن!" : `انتظار ${state.players[state.turn].name}...`;
+        
+        document.getElementById('card-0').className = state.turn === 0 ? 'player-card active-p' : 'player-card';
+        document.getElementById('card-1').className = state.turn === 1 ? 'player-card active-p' : 'player-card';
 
+        // تحريك القطع
         state.players.forEach((p, i) => {
             const cell = document.getElementById('c'+p.pos).getBoundingClientRect();
             const t = document.getElementById('token'+i);
@@ -229,6 +254,7 @@
             t.style.left = (cell.left + window.scrollX + (i*15) + 5) + 'px';
         });
 
+        // تلوين العقارات
         state.owners.forEach((owner, i) => {
             if(owner !== null) document.getElementById('c'+i).style.background = owner === 0 ? '#dbeafe' : '#fee2e2';
         });
@@ -236,21 +262,25 @@
 
     function initBoard() {
         const b = document.getElementById('board');
+        b.innerHTML = '<div class="center-hub"><div id="dice-result" style="font-size: 5rem;">🎲</div><div id="turn-indicator" style="color:#1e293b; font-weight:bold; margin-top:10px;"></div></div>';
+        
         const map = [[11,11],[11,10],[11,9],[11,8],[11,7],[11,6],[11,5],[11,4],[11,3],[11,2],[11,1],[10,1],[9,1],[8,1],[7,1],[6,1],[5,1],[4,1],[3,1],[2,1],[1,1],[1,2],[1,3],[1,4],[1,5],[1,6],[1,7],[1,8],[1,9],[1,10],[1,11],[2,11],[3,11],[4,11],[5,11],[6,11],[7,11],[8,11],[9,11],[10,11]];
         for(let i=0; i<40; i++) {
             const c = document.createElement('div');
             c.className = 'cell'; c.id = "c"+i;
             c.style.gridRow = map[i][0]; c.style.gridColumn = map[i][1];
-            c.innerText = i === 0 ? "🏁" : "🏢";
+            
+            if(i===0) c.innerHTML = "🏁<br>البداية";
+            else if(i===10) c.innerHTML = "⚖️<br>السجن";
+            else if(i===20) c.innerHTML = "🅿️<br>مواقف";
+            else if(i===30) c.innerHTML = "👮<br>إلى السجن";
+            else c.innerHTML = "🏢<br>عقار";
+            
             b.appendChild(c);
         }
     }
 
-    function copyID() {
-        navigator.clipboard.writeText(document.getElementById('peer-id').innerText);
-        alert("تم نسخ الـ ID! أرسله لصديقك الآن.");
-    }
-
+    function getDiceEmoji(n) { return ['', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][n]; }
     function addLog(m) {
         const l = document.getElementById('game-log');
         l.innerHTML = `<div>• ${m}</div>` + l.innerHTML;
