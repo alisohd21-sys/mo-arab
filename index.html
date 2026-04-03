@@ -2,206 +2,253 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>مونوبولي أونلاين - P2P Professional</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monopoly Ultra Online</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #2563eb; --accent: #f59e0b; --bg: #0f172a; }
-        body { font-family: 'Cairo', sans-serif; background: var(--bg); color: white; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        
-        /* الواجهة */
-        .screen { display: none; background: rgba(30, 41, 59, 0.9); padding: 30px; border-radius: 20px; box-shadow: 0 0 30px rgba(0,0,0,0.5); text-align: center; width: 400px; }
-        .active { display: block; }
-        input { width: 90%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; text-align: center; }
-        .btn { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .btn-main { background: var(--primary); color: white; }
-        .btn-sub { background: var(--accent); color: black; }
+        :root {
+            --primary: #3b82f6; --secondary: #8b5cf6; --accent: #f59e0b;
+            --danger: #ef4444; --success: #10b981; --dark: #0f172a;
+        }
 
-        /* اللوحة */
-        #game-screen { width: 1000px; display: none; grid-template-columns: 650px 320px; gap: 20px; }
-        #board { display: grid; grid-template-columns: repeat(11, 1fr); grid-template-rows: repeat(11, 1fr); width: 650px; height: 650px; background: #e2e8f0; border: 8px solid #334155; position: relative; }
-        .cell { border: 0.5px solid #94a3b8; background: white; color: #1e293b; font-size: 9px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: bold; }
-        .center { grid-column: 2/11; grid-row: 2/11; background: #cbd5e1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .token { width: 20px; height: 20px; border-radius: 50%; position: absolute; z-index: 100; border: 2px solid white; transition: 0.5s; }
-        
-        .sidebar { background: #1e293b; padding: 20px; border-radius: 15px; }
-        .log { height: 150px; overflow-y: auto; background: #0f172a; padding: 10px; font-size: 12px; margin: 10px 0; border-radius: 5px; }
+        body {
+            font-family: 'Cairo', sans-serif; background: var(--dark);
+            color: #f1f5f9; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh;
+        }
+
+        /* واجهة الدخول المودرن */
+        .auth-card {
+            background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px);
+            padding: 40px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1);
+            width: 380px; text-align: center; box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+        }
+
+        input {
+            width: 100%; padding: 12px; margin: 10px 0; border-radius: 12px; border: 2px solid #334155;
+            background: #1e293b; color: white; text-align: center; box-sizing: border-box;
+        }
+
+        .btn {
+            width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: none;
+            font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 1rem;
+        }
+
+        .btn-host { background: linear-gradient(45deg, var(--primary), var(--secondary)); color: white; }
+        .btn-join { background: #334155; color: white; border: 1px solid var(--primary); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* اللوحة الاحترافية */
+        #main-container { display: none; gap: 20px; padding: 20px; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        #board {
+            display: grid; grid-template-columns: repeat(11, 1fr); grid-template-rows: repeat(11, 1fr);
+            width: 650px; height: 650px; background: #e2e8f0; border: 12px solid #1e293b;
+            border-radius: 8px; position: relative; box-shadow: 0 0 50px rgba(0,0,0,0.5);
+        }
+
+        .cell {
+            border: 1px solid #94a3b8; background: white; color: #1e293b; font-size: 10px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-weight: bold; transition: 0.2s;
+        }
+
+        .center-hub {
+            grid-column: 2/11; grid-row: 2/11; background: #cbd5e1;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+
+        .token {
+            width: 24px; height: 24px; border-radius: 50%; position: absolute;
+            z-index: 100; border: 3px solid white; transition: 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .sidebar { width: 320px; background: #1e293b; padding: 20px; border-radius: 20px; }
+        .stat-card { background: #0f172a; padding: 15px; border-radius: 15px; margin-bottom: 10px; border-left: 5px solid var(--primary); }
+        .log-box { height: 180px; overflow-y: auto; background: #020617; padding: 10px; border-radius: 10px; font-size: 12px; margin-top: 15px; color: #94a3b8; }
     </style>
 </head>
 <body>
 
-    <div id="auth-screen" class="screen active">
-        <h2>🎲 مونوبولي إكسبريس</h2>
-        <input type="text" id="username" placeholder="أدخل اسمك">
-        <hr>
-        <button class="btn btn-main" onclick="startAI()">اللعب ضد الذكاء الاصطناعي</button>
-        <hr>
-        <p>اللعب أونلاين (جهازين مختلفين):</p>
-        <button class="btn btn-sub" onclick="createRoom()">إنشاء غرفة جديدة</button>
-        <div id="room-id-display" style="font-size: 12px; color: #fbbf24;"></div>
-        <input type="text" id="join-id" placeholder="أدخل ID الصديق">
-        <button class="btn btn-main" onclick="joinRoom()">انضمام لصديق</button>
-    </div>
+    <div id="auth-screen" class="auth-card">
+        <h1 style="color:var(--accent); margin-bottom:5px;">MONOPOLY ULTRA</h1>
+        <p style="font-size:14px; opacity:0.7;">أونلاين متعدد اللاعبين</p>
+        
+        <input type="text" id="username" placeholder="اكتب اسمك المستعار">
+        
+        <div style="margin: 20px 0;">
+            <button class="btn btn-host" id="host-btn" onclick="startHosting()">إنشاء غرفة جديدة (Host)</button>
+            <div id="my-id-box" style="display:none; margin-top:10px;">
+                <small>انسخ هذا الـ ID وأرسله لصديقك:</small>
+                <div id="peer-id" style="color:var(--accent); font-weight:bold; cursor:pointer; padding:5px; border:1px dashed;" onclick="copyID()">جاري التحميل...</div>
+            </div>
+        </div>
 
-    <div id="game-screen">
-        <div id="board">
-            <div class="center">
-                <h1 style="color: #ef4444; transform: rotate(-45deg);">MONOPOLY</h1>
-                <div id="dice-val" style="font-size: 3rem;">🎲</div>
-            </div>
-            </div>
-        <div class="sidebar">
-            <div id="p1-info"><b>اللاعب 1:</b> <span id="bal1">1500</span>$</div>
-            <div id="p2-info"><b>اللاعب 2:</b> <span id="bal2">1500</span>$</div>
-            <hr>
-            <div id="status">انتظار اللاعب الآخر...</div>
-            <button id="roll-btn" class="btn btn-main" onclick="rollAction()" disabled>رمي النرد</button>
-            <div class="log" id="game-log"></div>
+        <div style="border-top: 1px solid #334155; padding-top:20px;">
+            <input type="text" id="join-id-input" placeholder="ضع ID الصديق هنا">
+            <button class="btn btn-join" onclick="joinRoom()">انضمام الآن (Join)</button>
         </div>
     </div>
 
-    <div id="token0" class="token" style="background: #ef4444;"></div>
-    <div id="token1" class="token" style="background: #3b82f6;"></div>
+    <div id="main-container">
+        <div id="board">
+            <div class="center-hub">
+                <div style="font-size:50px; color:var(--danger); font-weight:900; transform: rotate(-45deg); border:5px solid; padding:10px;">MONOPOLY</div>
+                <div id="dice-display" style="font-size:4rem; margin-top:30px;">🎲</div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="stat-card">
+                <div id="p1-name-tag">اللاعب 1 (المضيف)</div>
+                <div style="font-size:24px; color:var(--success);">💰 <span id="p1-bal">1500</span>$</div>
+            </div>
+            <div class="stat-card" style="border-color:var(--secondary)">
+                <div id="p2-name-tag">اللاعب 2 (الضيف)</div>
+                <div style="font-size:24px; color:var(--success);">💰 <span id="p2-bal">1500</span>$</div>
+            </div>
+
+            <div id="game-status" style="text-align:center; margin:15px; font-weight:bold; color:var(--accent);">في انتظار الخصم...</div>
+            <button id="roll-btn" class="btn btn-host" onclick="playTurn()" disabled>إرمِ النرد 🎲</button>
+            
+            <div class="log-box" id="game-log"></div>
+        </div>
+    </div>
+
+    <div id="token0" class="token" style="background:var(--primary);"></div>
+    <div id="token1" class="token" style="background:var(--danger);"></div>
 
 <script>
     let peer, conn;
-    let myRole = ''; // 'host' or 'guest'
-    let isAI = false;
+    let myRole = ''; 
     let state = {
         players: [{pos:0, bal:1500, name:''}, {pos:0, bal:1500, name:''}],
         turn: 0,
-        owners: Array(40).fill(null)
+        owners: Array(40).fill(null),
+        ready: false
     };
 
-    // --- نظام الاتصال P2P ---
+    // --- نظام الربط P2P ---
     function initPeer() {
         peer = new Peer();
         peer.on('open', id => {
-            document.getElementById('room-id-display').innerText = "ID الخاص بك: " + id;
+            document.getElementById('peer-id').innerText = id;
+            document.getElementById('my-id-box').style.display = 'block';
         });
+
         peer.on('connection', c => {
             conn = c;
             myRole = 'host';
-            setupConn();
+            setupConnection();
         });
     }
 
-    function createRoom() {
+    function startHosting() {
+        if(!document.getElementById('username').value) return alert("اكتب اسمك أولاً");
+        document.getElementById('host-btn').disabled = true;
         initPeer();
-        alert("أرسل الـ ID لصديقك وانتظر انضمامه");
     }
 
     function joinRoom() {
-        const id = document.getElementById('join-id').value;
-        if(!id) return alert("أدخل ID أولاً");
+        const targetId = document.getElementById('join-id-input').value;
+        if(!targetId) return alert("أدخل ID الصديق أولاً");
+        
         peer = new Peer();
         peer.on('open', () => {
-            conn = peer.connect(id);
+            conn = peer.connect(targetId);
             myRole = 'guest';
-            setupConn();
+            setupConnection();
         });
     }
 
-    function setupConn() {
+    function setupConnection() {
         conn.on('open', () => {
             document.getElementById('auth-screen').style.display = 'none';
-            document.getElementById('game-screen').style.display = 'grid';
+            document.getElementById('main-container').style.display = 'flex';
+            
             if(myRole === 'host') {
-                state.players[0].name = document.getElementById('username').value || "المضيف";
-                sendState();
+                state.players[0].name = document.getElementById('username').value;
+                state.ready = true;
+                sync();
             }
-            addLog("تم الاتصال بنجاح!");
             initBoard();
-            updateUI();
+            addLog("🎉 تم الاتصال! لنبدأ اللعب.");
         });
+
         conn.on('data', data => {
             state = data;
             updateUI();
-            checkMyTurn();
         });
     }
 
-    // --- منطق اللعبة ---
-    function startAI() {
-        isAI = true;
-        myRole = 'host';
-        document.getElementById('auth-screen').style.display = 'none';
-        document.getElementById('game-screen').style.display = 'grid';
-        state.players[0].name = document.getElementById('username').value || "أنت";
-        state.players[1].name = "الكمبيوتر";
-        initBoard();
-        updateUI();
-        checkMyTurn();
-    }
-
-    function checkMyTurn() {
-        const isMyTurn = (myRole === 'host' && state.turn === 0) || (myRole === 'guest' && state.turn === 1);
-        document.getElementById('roll-btn').disabled = !isMyTurn;
-        document.getElementById('status').innerText = isMyTurn ? "دورك الآن!" : "انتظار الخصم...";
-        
-        if(isAI && state.turn === 1) setTimeout(aiPlay, 1000);
-    }
-
-    function rollAction() {
-        const d1 = Math.floor(Math.random()*6)+1;
-        const d2 = Math.floor(Math.random()*6)+1;
-        const move = d1+d2;
+    // --- منطق اللعبة المزامنة ---
+    function playTurn() {
+        const move = Math.floor(Math.random() * 6) + Math.floor(Math.random() * 6) + 2;
         const p = state.players[state.turn];
         
         p.pos = (p.pos + move) % 40;
         if(p.pos < move) p.bal += 200;
-        
-        // تبسيط المربعات (شراء تلقائي أو دفع إيجار)
-        handleSquare(state.turn, p.pos);
-        
-        state.turn = state.turn === 0 ? 1 : 0;
-        if(!isAI) sendState();
-        updateUI();
-        checkMyTurn();
-    }
 
-    function aiPlay() {
-        if(state.turn === 1) rollAction();
-    }
-
-    function handleSquare(pIdx, pos) {
-        const owner = state.owners[pos];
-        if(pos !== 0 && owner === null) {
-            // شراء تلقائي للتبسيط في هذا الكود
-            state.players[pIdx].bal -= 100;
-            state.owners[pos] = pIdx;
-            addLog(`${state.players[pIdx].name} اشترى عقاراً`);
-        } else if(owner !== null && owner !== pIdx) {
-            state.players[pIdx].bal -= 50;
-            state.players[owner].bal += 50;
-            addLog(`${state.players[pIdx].name} دفع إيجاراً`);
+        // منطق مبسط للشراء
+        if(p.pos !== 0 && state.owners[p.pos] === null) {
+            if(p.bal > 200) {
+                p.bal -= 150;
+                state.owners[p.pos] = state.turn;
+                addLog(`${p.name} اشترى عقاراً بـ 150$`);
+            }
+        } else if(state.owners[p.pos] !== null && state.owners[p.pos] !== state.turn) {
+            p.bal -= 100;
+            state.players[state.owners[p.pos]].bal += 100;
+            addLog(`${p.name} دفع إيجاراً 100$`);
         }
+
+        state.turn = state.turn === 0 ? 1 : 0;
+        sync();
+        updateUI();
     }
 
-    function sendState() { if(conn) conn.send(state); }
+    function sync() {
+        if(conn && conn.open) conn.send(state);
+    }
+
+    function updateUI() {
+        document.getElementById('p1-bal').innerText = state.players[0].bal;
+        document.getElementById('p2-bal').innerText = state.players[1].bal;
+        document.getElementById('p1-name-tag').innerText = state.players[0].name || "المضيف";
+        document.getElementById('p2-name-tag').innerText = state.players[1].name || "الضيف";
+
+        const isMyTurn = (myRole === 'host' && state.turn === 0) || (myRole === 'guest' && state.turn === 1);
+        document.getElementById('roll-btn').disabled = !isMyTurn;
+        document.getElementById('game-status').innerText = isMyTurn ? "دورك الآن!" : "انتظار الخصم...";
+
+        state.players.forEach((p, i) => {
+            const cell = document.getElementById('c'+p.pos).getBoundingClientRect();
+            const t = document.getElementById('token'+i);
+            t.style.top = (cell.top + window.scrollY + 10) + 'px';
+            t.style.left = (cell.left + window.scrollX + (i*15) + 5) + 'px';
+        });
+
+        state.owners.forEach((owner, i) => {
+            if(owner !== null) document.getElementById('c'+i).style.background = owner === 0 ? '#dbeafe' : '#fee2e2';
+        });
+    }
 
     function initBoard() {
         const b = document.getElementById('board');
-        const map = [ [11,11],[11,10],[11,9],[11,8],[11,7],[11,6],[11,5],[11,4],[11,3],[11,2],[11,1],[10,1],[9,1],[8,1],[7,1],[6,1],[5,1],[4,1],[3,1],[2,1],[1,1],[1,2],[1,3],[1,4],[1,5],[1,6],[1,7],[1,8],[1,9],[1,10],[1,11],[2,11],[3,11],[4,11],[5,11],[6,11],[7,11],[8,11],[9,11],[10,11] ];
+        const map = [[11,11],[11,10],[11,9],[11,8],[11,7],[11,6],[11,5],[11,4],[11,3],[11,2],[11,1],[10,1],[9,1],[8,1],[7,1],[6,1],[5,1],[4,1],[3,1],[2,1],[1,1],[1,2],[1,3],[1,4],[1,5],[1,6],[1,7],[1,8],[1,9],[1,10],[1,11],[2,11],[3,11],[4,11],[5,11],[6,11],[7,11],[8,11],[9,11],[10,11]];
         for(let i=0; i<40; i++) {
             const c = document.createElement('div');
-            c.className = 'cell';
+            c.className = 'cell'; c.id = "c"+i;
             c.style.gridRow = map[i][0]; c.style.gridColumn = map[i][1];
-            c.innerHTML = i===0 ? "🏁" : "🏢";
-            c.id = "c"+i;
+            c.innerText = i === 0 ? "🏁" : "🏢";
             b.appendChild(c);
         }
     }
 
-    function updateUI() {
-        document.getElementById('bal1').innerText = state.players[0].bal;
-        document.getElementById('bal2').innerText = state.players[1].bal;
-        state.players.forEach((p, i) => {
-            const cell = document.getElementById('c'+p.pos).getBoundingClientRect();
-            const t = document.getElementById('token'+i);
-            t.style.top = (cell.top + window.scrollY + 5) + 'px';
-            t.style.left = (cell.left + window.scrollX + (i*10)) + 'px';
-        });
+    function copyID() {
+        navigator.clipboard.writeText(document.getElementById('peer-id').innerText);
+        alert("تم نسخ الـ ID! أرسله لصديقك الآن.");
     }
 
     function addLog(m) {
